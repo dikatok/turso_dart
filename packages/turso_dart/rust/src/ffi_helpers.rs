@@ -4,6 +4,7 @@ use std::ffi::{CStr, c_char};
 
 use crate::{
     error::{Error, Result},
+    params::Params,
     rows::Rows,
     value::Value,
 };
@@ -55,4 +56,15 @@ pub async fn convert_rows_to_json(rows: &mut Rows) -> Result<String> {
     }
 
     serde_json::to_string(&rows_json).map_err(|e| Error::new(&e.to_string()))
+}
+
+pub fn json_to_params(params_json: *const c_char) -> Result<Params> {
+    if params_json.is_null() {
+        Ok(Params::None)
+    } else {
+        match unsafe { c_char_to_str(params_json) }.and_then(|s| Params::from_json(s)) {
+            Ok(p) => return Ok(p),
+            Err(e) => return Err(e),
+        }
+    }
 }

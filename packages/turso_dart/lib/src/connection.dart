@@ -4,6 +4,7 @@ import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:turso_dart/src/ffi.g.dart' as g;
 import 'package:turso_dart/src/helpers.dart';
+import 'package:turso_dart/src/params.dart';
 import 'package:turso_dart/src/statement.dart';
 import 'package:turso_dart/src/transaction.dart';
 
@@ -20,8 +21,12 @@ class Connection implements Finalizable {
 
   final Pointer<Void> _ptr;
 
-  List<Map<String, dynamic>> query(String sql) {
-    final result = g.connection_query(_ptr, sql.toNativeUtf8().cast());
+  List<Map<String, dynamic>> query(String sql, {Params? params}) {
+    final result = g.connection_query(
+      _ptr,
+      sql.toNativeUtf8().cast(),
+      params?.encode()?.toNativeUtf8().cast() ?? nullptr,
+    );
     final g.FFIStringResponse(:value, :error_message) = result;
     if (error_message.isNotEmpty) {
       throw Exception(error_message.toDartString());
@@ -31,8 +36,12 @@ class Connection implements Finalizable {
     return rows;
   }
 
-  void execute(String sql) {
-    final result = g.connection_execute(_ptr, sql.toNativeUtf8().cast());
+  void execute(String sql, {Params? params}) {
+    final result = g.connection_execute(
+      _ptr,
+      sql.toNativeUtf8().cast(),
+      params?.encode()?.toNativeUtf8().cast() ?? nullptr,
+    );
     final g.FFIResponse(:error_message) = result;
     if (error_message.isNotEmpty) {
       throw Exception(error_message.toDartString());

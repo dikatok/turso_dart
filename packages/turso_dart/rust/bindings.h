@@ -32,9 +32,9 @@ struct FFIResponse database_push(void *db_ptr);
 
 void database_dispose(void *db_ptr);
 
-struct FFIStringResponse connection_query(void *conn_ptr, const char *sql);
+struct FFIStringResponse connection_query(void *conn_ptr, const char *sql, const char *params_json);
 
-struct FFIResponse connection_execute(void *conn_ptr, const char *sql);
+struct FFIResponse connection_execute(void *conn_ptr, const char *sql, const char *params_json);
 
 struct FFIResponse connection_execute_batch(void *conn_ptr, const char *sql);
 
@@ -48,9 +48,9 @@ struct FFIResponse connection_transaction(void *conn_ptr, const char *behavior);
 
 void connection_dispose(void *conn_ptr);
 
-struct FFIStringResponse statement_query(void *stmt_ptr);
+struct FFIStringResponse statement_query(void *stmt_ptr, const char *params_json);
 
-struct FFIResponse statement_execute(void *stmt_ptr);
+struct FFIResponse statement_execute(void *stmt_ptr, const char *params_json);
 
 void statement_dispose(void *stmt_ptr);
 

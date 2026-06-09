@@ -41,19 +41,29 @@ external void database_dispose(
 );
 
 @ffi.Native<
-  FFIStringResponse Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)
+  FFIStringResponse Function(
+    ffi.Pointer<ffi.Void>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+  )
 >()
 external FFIStringResponse connection_query(
   ffi.Pointer<ffi.Void> conn_ptr,
   ffi.Pointer<ffi.Char> sql,
+  ffi.Pointer<ffi.Char> params_json,
 );
 
 @ffi.Native<
-  FFIResponse Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)
+  FFIResponse Function(
+    ffi.Pointer<ffi.Void>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+  )
 >()
 external FFIResponse connection_execute(
   ffi.Pointer<ffi.Void> conn_ptr,
   ffi.Pointer<ffi.Char> sql,
+  ffi.Pointer<ffi.Char> params_json,
 );
 
 @ffi.Native<
@@ -101,14 +111,20 @@ external void connection_dispose(
   ffi.Pointer<ffi.Void> conn_ptr,
 );
 
-@ffi.Native<FFIStringResponse Function(ffi.Pointer<ffi.Void>)>()
+@ffi.Native<
+  FFIStringResponse Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)
+>()
 external FFIStringResponse statement_query(
   ffi.Pointer<ffi.Void> stmt_ptr,
+  ffi.Pointer<ffi.Char> params_json,
 );
 
-@ffi.Native<FFIResponse Function(ffi.Pointer<ffi.Void>)>()
+@ffi.Native<
+  FFIResponse Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)
+>()
 external FFIResponse statement_execute(
   ffi.Pointer<ffi.Void> stmt_ptr,
+  ffi.Pointer<ffi.Char> params_json,
 );
 
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>()
@@ -137,6 +153,11 @@ external FFIResponse transaction_rollback(
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>()
 external void transaction_dispose(
   ffi.Pointer<ffi.Void> tx_ptr,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Char>)>()
+external void free_string(
+  ffi.Pointer<ffi.Char> ptr,
 );
 
 final class FFIResponse extends ffi.Struct {

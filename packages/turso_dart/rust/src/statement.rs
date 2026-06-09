@@ -9,7 +9,7 @@ use crate::{
     connection::Connection,
     error::{Error, Result},
     execute::Execute,
-    params::{self, IntoParams},
+    params::Params,
     rows::{Column, Row, Rows},
 };
 
@@ -57,43 +57,41 @@ impl Statement {
         }
     }
 
-    pub async fn query(&mut self, params: impl IntoParams) -> Result<Rows> {
+    pub async fn query(&mut self, params: Params) -> Result<Rows> {
         self.reset()?;
 
         let mut stmt = self.inner.lock().unwrap();
-        let params = params.into_params()?;
         match params {
-            params::Params::None => (),
-            params::Params::Positional(values) => {
+            Params::None => (),
+            Params::Positional(values) => {
                 for (i, value) in values.into_iter().enumerate() {
                     stmt.bind_positional(i + 1, value.into())?;
                 }
             }
-            params::Params::Named(values) => {
+            Params::Named(values) => {
                 for (name, value) in values.into_iter() {
                     let position = stmt.named_position(name)?;
                     stmt.bind_positional(position, value.into())?;
                 }
             }
         }
+
         let rows = Rows::new(self.clone());
         Ok(rows)
     }
 
-    pub async fn execute(&mut self, params: impl IntoParams) -> Result<u64> {
-        {
-            self.inner.lock().unwrap().reset()?;
-        }
-        let params = params.into_params()?;
+    pub async fn execute(&mut self, params: Params) -> Result<u64> {
+        self.reset()?;
+
         match params {
-            params::Params::None => (),
-            params::Params::Positional(values) => {
+            Params::None => (),
+            Params::Positional(values) => {
                 for (i, value) in values.into_iter().enumerate() {
                     let mut stmt = self.inner.lock().unwrap();
                     stmt.bind_positional(i + 1, value.into())?;
                 }
             }
-            params::Params::Named(values) => {
+            Params::Named(values) => {
                 for (name, value) in values.into_iter() {
                     let mut stmt = self.inner.lock().unwrap();
                     let position = stmt.named_position(name)?;

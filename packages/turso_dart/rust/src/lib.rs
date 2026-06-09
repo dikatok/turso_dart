@@ -10,7 +10,7 @@ use crate::{
     connection::Connection,
     database::{Database, LocalDb, LocalDbConfig},
     error::Error,
-    ffi_helpers::{c_char_to_str, convert_rows_to_json},
+    ffi_helpers::{c_char_to_str, convert_rows_to_json, json_to_params},
     ffi_response::{FFIBoolResponse, FFIResponse, FFIStringResponse},
     statement::Statement,
     sync::{SyncDatabase, SyncDb, SyncDbConfig},
@@ -154,14 +154,22 @@ pub extern "C" fn database_dispose(db_ptr: *mut c_void) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn connection_query(conn_ptr: *mut c_void, sql: *const c_char) -> FFIStringResponse {
+pub extern "C" fn connection_query(
+    conn_ptr: *mut c_void,
+    sql: *const c_char,
+    params_json: *const c_char,
+) -> FFIStringResponse {
     let connection = unsafe { &*(conn_ptr as *mut Connection) };
     let sql = match unsafe { c_char_to_str(sql) } {
         Ok(json) => json,
         Err(e) => return FFIStringResponse::err(e),
     };
+    let params = match json_to_params(params_json) {
+        Ok(params) => params,
+        Err(e) => return FFIStringResponse::err(e),
+    };
     match runtime().block_on(async {
-        let mut rows = connection.query(sql, ()).await?;
+        let mut rows = connection.query(sql, params).await?;
         convert_rows_to_json(&mut rows).await
     }) {
         Ok(json) => FFIStringResponse::ok(json),
@@ -170,14 +178,22 @@ pub extern "C" fn connection_query(conn_ptr: *mut c_void, sql: *const c_char) ->
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn connection_execute(conn_ptr: *mut c_void, sql: *const c_char) -> FFIResponse {
+pub extern "C" fn connection_execute(
+    conn_ptr: *mut c_void,
+    sql: *const c_char,
+    params_json: *const c_char,
+) -> FFIResponse {
     let connection = unsafe { &*(conn_ptr as *mut Connection) };
     let sql = match unsafe { c_char_to_str(sql) } {
         Ok(json) => json,
         Err(e) => return FFIResponse::err(e),
     };
+    let params = match json_to_params(params_json) {
+        Ok(params) => params,
+        Err(e) => return FFIResponse::err(e),
+    };
     match runtime().block_on(async {
-        connection.execute(sql, ()).await?;
+        connection.execute(sql, params).await?;
         Ok(())
     }) {
         Ok(()) => FFIResponse::ok(std::ptr::null_mut()),
@@ -288,10 +304,17 @@ pub extern "C" fn connection_dispose(conn_ptr: *mut c_void) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn statement_query(stmt_ptr: *mut c_void) -> FFIStringResponse {
+pub extern "C" fn statement_query(
+    stmt_ptr: *mut c_void,
+    params_json: *const c_char,
+) -> FFIStringResponse {
     let statement = unsafe { &mut *(stmt_ptr as *mut Statement) };
+    let params = match json_to_params(params_json) {
+        Ok(params) => params,
+        Err(e) => return FFIStringResponse::err(e),
+    };
     match runtime().block_on(async {
-        let mut rows = statement.query(()).await?;
+        let mut rows = statement.query(params).await?;
         convert_rows_to_json(&mut rows).await
     }) {
         Ok(json) => FFIStringResponse::ok(json),
@@ -300,10 +323,17 @@ pub extern "C" fn statement_query(stmt_ptr: *mut c_void) -> FFIStringResponse {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn statement_execute(stmt_ptr: *mut c_void) -> FFIResponse {
+pub extern "C" fn statement_execute(
+    stmt_ptr: *mut c_void,
+    params_json: *const c_char,
+) -> FFIResponse {
     let statement = unsafe { &mut *(stmt_ptr as *mut Statement) };
+    let params = match json_to_params(params_json) {
+        Ok(params) => params,
+        Err(e) => return FFIResponse::err(e),
+    };
     match runtime().block_on(async {
-        statement.execute(()).await?;
+        statement.execute(params).await?;
         Ok(())
     }) {
         Ok(()) => FFIResponse::ok(std::ptr::null_mut()),

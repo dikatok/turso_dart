@@ -3,6 +3,7 @@ use std::{str::FromStr, sync::Arc};
 use crate::{
     connection::Connection,
     error::{Error, Result},
+    params::Params,
     statement::Statement,
 };
 
@@ -35,9 +36,11 @@ impl Transaction {
             TransactionBehavior::Immediate => "BEGIN IMMEDIATE",
             TransactionBehavior::Exclusive => "BEGIN EXCLUSIVE",
         };
-        conn.execute(query, ()).await.map(move |_| Transaction {
-            conn: Arc::new(conn),
-        })
+        conn.execute(query, Params::None)
+            .await
+            .map(move |_| Transaction {
+                conn: Arc::new(conn),
+            })
     }
 
     pub async fn prepare(&self, sql: &str) -> Result<Statement> {
@@ -45,12 +48,12 @@ impl Transaction {
     }
 
     pub async fn commit(self) -> Result<()> {
-        let _ = self.conn.execute("COMMIT", ()).await;
+        let _ = self.conn.execute("COMMIT", Params::None).await;
         Ok(())
     }
 
     pub async fn rollback(self) -> Result<()> {
-        self.conn.execute("ROLLBACK", ()).await?;
+        self.conn.execute("ROLLBACK", Params::None).await?;
         Ok(())
     }
 }

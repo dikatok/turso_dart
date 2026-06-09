@@ -3,7 +3,7 @@ use std::task::Waker;
 
 use crate::error::Error;
 use crate::error::Result;
-use crate::params::IntoParams;
+use crate::params::Params;
 use crate::rows::Rows;
 use crate::statement::Statement;
 use crate::transaction::Transaction;
@@ -28,39 +28,39 @@ impl Connection {
         }
     }
 
-    pub async fn query(&self, sql: impl AsRef<str>, params: impl IntoParams) -> Result<Rows> {
+    pub async fn query(&self, sql: &str, params: Params) -> Result<Rows> {
         let mut stmt = self.prepare(sql).await?;
         stmt.query(params).await
     }
 
-    pub async fn execute(&self, sql: impl AsRef<str>, params: impl IntoParams) -> Result<u64> {
+    pub async fn execute(&self, sql: &str, params: Params) -> Result<u64> {
         let mut stmt = self.prepare(sql).await?;
         stmt.execute(params).await
     }
 
-    pub async fn execute_batch(&self, sql: impl AsRef<str>) -> Result<()> {
+    pub async fn execute_batch(&self, sql: &str) -> Result<()> {
         self.prepare_execute_batch(sql).await?;
         Ok(())
     }
 
-    pub async fn prepare(&self, sql: impl AsRef<str>) -> Result<Statement> {
+    pub async fn prepare(&self, sql: &str) -> Result<Statement> {
         let conn = self.inner.as_ref().ok_or(Error::new(INNER_NOT_SET))?;
         let stmt = conn.prepare_single(sql)?;
         Ok(Statement::new(stmt, self.clone()))
     }
 
-    pub async fn prepare_cached(&self, sql: impl AsRef<str>) -> Result<Statement> {
+    pub async fn prepare_cached(&self, sql: &str) -> Result<Statement> {
         let conn = self.inner.as_ref().ok_or(Error::new(INNER_NOT_SET))?;
         let stmt = conn.prepare_cached(sql)?;
         Ok(Statement::new(stmt, self.clone()))
     }
 
-    pub async fn prepare_execute_batch(&self, sql: impl AsRef<str>) -> Result<()> {
+    pub async fn prepare_execute_batch(&self, sql: &str) -> Result<()> {
         let conn = self.inner.as_ref().ok_or(Error::new(INNER_NOT_SET))?;
-        let mut sql = sql.as_ref();
+        let mut sql: &str = sql.as_ref();
         while let Some((stmt, offset)) = conn.prepare_first(sql)? {
             let mut stmt = Statement::new(stmt, self.clone());
-            let _ = stmt.execute(()).await?;
+            let _ = stmt.execute(Params::None).await?;
             sql = &sql[offset..];
         }
         Ok(())
