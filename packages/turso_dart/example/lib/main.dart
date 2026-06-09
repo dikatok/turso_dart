@@ -9,7 +9,14 @@ void main() async {
   conn.execute(
     "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, name TEXT)",
   );
-  conn.execute("INSERT INTO test (name) VALUES ('foo')");
+  conn.execute(
+    "INSERT INTO test (name) VALUES (?1)",
+    params: Params.positional(["Alice"]),
+  );
+  conn.execute(
+    "INSERT INTO test (name) VALUES (:name)",
+    params: Params.named({":name": "Bob"}),
+  );
   final res = conn.query("SELECT * FROM test");
   print(res);
   runApp(const MyApp());
