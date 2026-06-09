@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'package:path_provider/path_provider.dart';
+import 'package:turso_dart/turso_dart.dart';
 
-import 'package:turso_dart/turso_dart.dart' as turso_dart;
-
-void main() {
+void main() async {
+  final path = await getApplicationSupportDirectory();
+  final db = connect(LocalDbConfig('${path.path}/test.db'));
+  final conn = db.connect();
+  conn.execute(
+    "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, name TEXT)",
+  );
+  conn.execute("INSERT INTO test (name) VALUES ('foo')");
+  final res = conn.query("SELECT * FROM test");
+  print(res);
   runApp(const MyApp());
 }
 
@@ -15,14 +23,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late int sumResult;
-  late Future<int> sumAsyncResult;
-
   @override
   void initState() {
     super.initState();
-    sumResult = turso_dart.sum(1, 2);
-    sumAsyncResult = turso_dart.sumAsync(3, 4);
   }
 
   @override
@@ -42,26 +45,6 @@ class _MyAppState extends State<MyApp> {
                   'The native code is built as part of the Flutter Runner build.',
                   style: textStyle,
                   textAlign: .center,
-                ),
-                spacerSmall,
-                Text(
-                  'sum(1, 2) = $sumResult',
-                  style: textStyle,
-                  textAlign: .center,
-                ),
-                spacerSmall,
-                FutureBuilder<int>(
-                  future: sumAsyncResult,
-                  builder: (BuildContext context, AsyncSnapshot<int> value) {
-                    final displayValue = (value.hasData)
-                        ? value.data
-                        : 'loading';
-                    return Text(
-                      'await sumAsync(3, 4) = $displayValue',
-                      style: textStyle,
-                      textAlign: .center,
-                    );
-                  },
                 ),
               ],
             ),

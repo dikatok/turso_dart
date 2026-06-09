@@ -1,5 +1,5 @@
 use std::{
-    ffi::{c_char, c_void},
+    ffi::{CString, c_char, c_void},
     str::FromStr,
     sync::OnceLock,
 };
@@ -147,6 +147,13 @@ pub extern "C" fn database_push(db_ptr: *mut c_void) -> FFIResponse {
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn database_dispose(db_ptr: *mut c_void) {
+    if !db_ptr.is_null() {
+        let _ = unsafe { Box::from_raw(db_ptr as *mut DbHandle) };
+    }
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn connection_query(conn_ptr: *mut c_void, sql: *const c_char) -> FFIStringResponse {
     let connection = unsafe { &*(conn_ptr as *mut Connection) };
     let sql = match unsafe { c_char_to_str(sql) } {
@@ -274,6 +281,13 @@ pub extern "C" fn connection_transaction(
 }
 
 #[unsafe(no_mangle)]
+pub extern "C" fn connection_dispose(conn_ptr: *mut c_void) {
+    if !conn_ptr.is_null() {
+        let _ = unsafe { Box::from_raw(conn_ptr as *mut Connection) };
+    }
+}
+
+#[unsafe(no_mangle)]
 pub extern "C" fn statement_query(stmt_ptr: *mut c_void) -> FFIStringResponse {
     let statement = unsafe { &mut *(stmt_ptr as *mut Statement) };
     match runtime().block_on(async {
@@ -294,6 +308,13 @@ pub extern "C" fn statement_execute(stmt_ptr: *mut c_void) -> FFIResponse {
     }) {
         Ok(()) => FFIResponse::ok(std::ptr::null_mut()),
         Err(e) => FFIResponse::err(e),
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn statement_dispose(stmt_ptr: *mut c_void) {
+    if !stmt_ptr.is_null() {
+        let _ = unsafe { Box::from_raw(stmt_ptr as *mut Statement) };
     }
 }
 
@@ -334,5 +355,21 @@ pub extern "C" fn transaction_rollback(tx_ptr: *mut c_void) -> FFIResponse {
     }) {
         Ok(()) => FFIResponse::ok(std::ptr::null_mut()),
         Err(e) => FFIResponse::err(e),
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn transaction_dispose(tx_ptr: *mut c_void) {
+    if !tx_ptr.is_null() {
+        let _ = unsafe { Box::from_raw(tx_ptr as *mut Transaction) };
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn free_string(ptr: *mut c_char) {
+    if !ptr.is_null() {
+        unsafe {
+            drop(CString::from_raw(ptr));
+        }
     }
 }

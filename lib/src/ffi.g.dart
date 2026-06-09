@@ -35,6 +35,11 @@ external FFIResponse database_push(
   ffi.Pointer<ffi.Void> db_ptr,
 );
 
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>()
+external void database_dispose(
+  ffi.Pointer<ffi.Void> db_ptr,
+);
+
 @ffi.Native<
   FFIStringResponse Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Char>)
 >()
@@ -91,6 +96,11 @@ external FFIResponse connection_transaction(
   ffi.Pointer<ffi.Char> behavior,
 );
 
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>()
+external void connection_dispose(
+  ffi.Pointer<ffi.Void> conn_ptr,
+);
+
 @ffi.Native<FFIStringResponse Function(ffi.Pointer<ffi.Void>)>()
 external FFIStringResponse statement_query(
   ffi.Pointer<ffi.Void> stmt_ptr,
@@ -98,6 +108,11 @@ external FFIStringResponse statement_query(
 
 @ffi.Native<FFIResponse Function(ffi.Pointer<ffi.Void>)>()
 external FFIResponse statement_execute(
+  ffi.Pointer<ffi.Void> stmt_ptr,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>()
+external void statement_dispose(
   ffi.Pointer<ffi.Void> stmt_ptr,
 );
 
@@ -116,6 +131,11 @@ external FFIResponse transaction_commit(
 
 @ffi.Native<FFIResponse Function(ffi.Pointer<ffi.Void>)>()
 external FFIResponse transaction_rollback(
+  ffi.Pointer<ffi.Void> tx_ptr,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>()
+external void transaction_dispose(
   ffi.Pointer<ffi.Void> tx_ptr,
 );
 
