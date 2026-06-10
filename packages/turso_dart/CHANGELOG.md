@@ -1,3 +1,6 @@
-## 0.0.1
+## 0.0.2
+- fix possible memory leaks
+- fix crash on tx commit/rollback
 
-* TODO: Describe initial release.
+## 0.0.1
+- initial release
