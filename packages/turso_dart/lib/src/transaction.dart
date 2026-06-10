@@ -19,28 +19,27 @@ class Transaction implements Finalizable {
   final Pointer<Void> _ptr;
 
   Statement prepare(String sql) {
-    final result = g.transaction_prepare(_ptr, sql.toNativeUtf8().cast());
-    final g.FFIResponse(:ptr, :error_message) = result;
-    if (error_message.isNotEmpty) {
-      throw Exception(error_message.toDartString());
-    }
-    return newStatement(ptr);
+    return using((arena) {
+      final result = g.transaction_prepare(
+        _ptr,
+        sql.toNativeUtf8(allocator: arena).cast(),
+      );
+      final g.FFIResponse(:ptr, :error_message) = result;
+      checkIfError(error_message);
+      return newStatement(ptr);
+    });
   }
 
   void commit() {
     final result = g.transaction_commit(_ptr);
     final g.FFIResponse(:error_message) = result;
-    if (error_message.isNotEmpty) {
-      throw Exception(error_message.toDartString());
-    }
+    checkIfError(error_message);
   }
 
   void rollback() {
     final result = g.transaction_rollback(_ptr);
     final g.FFIResponse(:error_message) = result;
-    if (error_message.isNotEmpty) {
-      throw Exception(error_message.toDartString());
-    }
+    checkIfError(error_message);
   }
 }
 

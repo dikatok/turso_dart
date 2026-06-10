@@ -20,27 +20,21 @@ class Database implements Finalizable {
   Connection connect() {
     final result = g.database_connect(_ptr);
     final g.FFIResponse(:ptr, :error_message) = result;
-    if (error_message.isNotEmpty) {
-      throw Exception(error_message.toDartString());
-    }
+    checkIfError(error_message);
     return newConnection(ptr);
   }
 
   bool pull() {
     final result = g.database_pull(_ptr);
     final g.FFIBoolResponse(:value, :error_message) = result;
-    if (error_message.isNotEmpty) {
-      throw Exception(error_message.toDartString());
-    }
+    checkIfError(error_message);
     return value;
   }
 
   void push() {
     final result = g.database_push(_ptr);
     final g.FFIResponse(:error_message) = result;
-    if (error_message.isNotEmpty) {
-      throw Exception(error_message.toDartString());
-    }
+    checkIfError(error_message);
   }
 }
 

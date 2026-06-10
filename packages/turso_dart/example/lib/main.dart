@@ -4,7 +4,7 @@ import 'package:turso_dart/turso_dart.dart';
 
 void main() async {
   final path = await getApplicationSupportDirectory();
-  final db = connect(LocalDbConfig('${path.path}/test.db'));
+  final db = connect(LocalDbConfig('${path.path}/new.db'));
   final conn = db.connect();
   conn.execute(
     "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, name TEXT)",
@@ -17,8 +17,15 @@ void main() async {
     "INSERT INTO test (name) VALUES (:name)",
     params: Params.named({":name": "Bob"}),
   );
-  final res = conn.query("SELECT * FROM test");
-  print(res);
+  print(conn.query("SELECT * FROM test"));
+  final stmt = conn.prepare("SELECT * FROM test where id = ?1");
+  print(stmt.query(params: Params.positional([1])));
+  final tx = conn.transaction();
+  tx
+      .prepare("INSERT INTO test (name) VALUES (:name)")
+      .execute(params: Params.named({":name": "Charlie"}));
+  tx.commit();
+  print(conn.query("SELECT * FROM test"));
   runApp(const MyApp());
 }
 

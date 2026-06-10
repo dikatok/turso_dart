@@ -22,53 +22,57 @@ class Connection implements Finalizable {
   final Pointer<Void> _ptr;
 
   List<Map<String, dynamic>> query(String sql, {Params? params}) {
-    final result = g.connection_query(
-      _ptr,
-      sql.toNativeUtf8().cast(),
-      params?.encode()?.toNativeUtf8().cast() ?? nullptr,
-    );
-    final g.FFIStringResponse(:value, :error_message) = result;
-    if (error_message.isNotEmpty) {
-      throw Exception(error_message.toDartString());
-    }
-    final json = value.toDartString();
-    final rows = (jsonDecode(json) as List).cast<Map<String, dynamic>>();
-    return rows;
+    return using((arena) {
+      final result = g.connection_query(
+        _ptr,
+        sql.toNativeUtf8(allocator: arena).cast(),
+        params?.encode()?.toNativeUtf8(allocator: arena).cast() ?? nullptr,
+      );
+      final g.FFIStringResponse(:value, :error_message) = result;
+      checkIfError(error_message);
+      final json = value.toDartString();
+      final rows = (jsonDecode(json) as List).cast<Map<String, dynamic>>();
+      g.free_string(value);
+      return rows;
+    });
   }
 
   void execute(String sql, {Params? params}) {
-    final result = g.connection_execute(
-      _ptr,
-      sql.toNativeUtf8().cast(),
-      params?.encode()?.toNativeUtf8().cast() ?? nullptr,
-    );
-    final g.FFIResponse(:error_message) = result;
-    if (error_message.isNotEmpty) {
-      throw Exception(error_message.toDartString());
-    }
+    return using((arena) {
+      final result = g.connection_execute(
+        _ptr,
+        sql.toNativeUtf8(allocator: arena).cast(),
+        params?.encode()?.toNativeUtf8(allocator: arena).cast() ?? nullptr,
+      );
+      final g.FFIResponse(:error_message) = result;
+      checkIfError(error_message);
+    });
   }
 
   Statement prepare(String sql) {
-    final result = g.connection_prepare(_ptr, sql.toNativeUtf8().cast());
-    final g.FFIResponse(:ptr, :error_message) = result;
-    if (error_message.isNotEmpty) {
-      throw Exception(error_message.toDartString());
-    }
-    return newStatement(ptr);
+    return using((arena) {
+      final result = g.connection_prepare(
+        _ptr,
+        sql.toNativeUtf8(allocator: arena).cast(),
+      );
+      final g.FFIResponse(:ptr, :error_message) = result;
+      checkIfError(error_message);
+      return newStatement(ptr);
+    });
   }
 
   Transaction transaction({
     TransactionBehavior behavior = TransactionBehavior.deferred,
   }) {
-    final result = g.connection_transaction(
-      _ptr,
-      behavior.name.toNativeUtf8().cast(),
-    );
-    final g.FFIResponse(:ptr, :error_message) = result;
-    if (error_message.isNotEmpty) {
-      throw Exception(error_message.toDartString());
-    }
-    return newTransaction(ptr);
+    return using((arena) {
+      final result = g.connection_transaction(
+        _ptr,
+        behavior.name.toNativeUtf8(allocator: arena).cast(),
+      );
+      final g.FFIResponse(:ptr, :error_message) = result;
+      checkIfError(error_message);
+      return newTransaction(ptr);
+    });
   }
 }
 
