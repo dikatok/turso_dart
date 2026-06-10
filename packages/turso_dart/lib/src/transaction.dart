@@ -17,8 +17,10 @@ class Transaction implements Finalizable {
   );
 
   final Pointer<Void> _ptr;
+  bool _disposed = false;
 
   Statement prepare(String sql) {
+    if (_disposed) throw Exception('Transaction is disposed');
     return using((arena) {
       final result = g.transaction_prepare(
         _ptr,
@@ -31,14 +33,20 @@ class Transaction implements Finalizable {
   }
 
   void commit() {
+    if (_disposed) return;
+    _disposed = true;
     final result = g.transaction_commit(_ptr);
     final g.FFIResponse(:error_message) = result;
+    _finalizer.detach(this);
     checkIfError(error_message);
   }
 
   void rollback() {
+    if (_disposed) return;
+    _disposed = true;
     final result = g.transaction_rollback(_ptr);
     final g.FFIResponse(:error_message) = result;
+    _finalizer.detach(this);
     checkIfError(error_message);
   }
 }
