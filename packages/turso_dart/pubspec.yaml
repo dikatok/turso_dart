@@ -1,6 +1,6 @@
 name: turso_dart
 description: "Dart binding for the new-gen Turso"
-version: 0.0.2
+version: 0.1.0
 repository: https://github.com/dikatok/turso_dart
 topics: [turso, sqlite, database, local, sync]
 
