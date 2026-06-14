@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:turso_dart/turso_dart.dart';
+import 'package:turso_dart/isolate.dart';
 
 void main() async {
   final path = await getApplicationSupportDirectory();
-  final db = connect(LocalDbConfig('${path.path}/new.db'));
-  final conn = db.connect();
-  conn.execute(
+  final db = await connect(LocalDbConfig('${path.path}/new.db'));
+  final conn = await db.connect();
+  await conn.execute(
     "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, name TEXT)",
   );
-  conn.execute(
+  await conn.execute(
     "INSERT INTO test (name) VALUES (?1)",
     params: Params.positional(["Alice"]),
   );
-  conn.execute(
+  await conn.execute(
     "INSERT INTO test (name) VALUES (:name)",
     params: Params.named({":name": "Bob"}),
   );
-  print(conn.query("SELECT * FROM test"));
-  final stmt = conn.prepare("SELECT * FROM test where id = ?1");
-  print(stmt.query(params: Params.positional([1])));
-  final tx = conn.transaction();
-  tx
-      .prepare("INSERT INTO test (name) VALUES (:name)")
-      .execute(params: Params.named({":name": "Charlie"}));
-  tx.commit();
-  print(conn.query("SELECT * FROM test"));
+  print(await conn.query("SELECT * FROM test"));
+  final stmt = await conn.prepare("SELECT * FROM test where id = ?1");
+  print(await stmt.query(params: Params.positional([1])));
+  final tx = await conn.transaction();
+  await (await tx.prepare(
+    "INSERT INTO test (name) VALUES (:name)",
+  )).execute(params: Params.named({":name": "Charlie"}));
+  await tx.commit();
+  print(await conn.query("SELECT * FROM test"));
   runApp(const MyApp());
 }
 
